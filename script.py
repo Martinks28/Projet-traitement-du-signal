@@ -83,10 +83,10 @@ def gaussian_evm(images, fps, level, alpha, freq_range):
     """
     
     # Gaussian pyramid
-    # A CODER. utiliser le noyau gaussien défini dans utils.py
+    gaussian_pyramid = generateGaussianPyramid(images, gaussian_kernel, level)
                     
     # Filter the pyramid  
-    # A CODER         
+    pyramid_filter = apply_temporal_filter(gaussian_pyramid, fps, freq_range)         
 
     # Video reconstruction   
     output_video = np.zeros_like(images)
