@@ -83,10 +83,21 @@ def gaussian_evm(images, fps, level, alpha, freq_range):
     """
     
     # Gaussian pyramid
-    gaussian_pyramid = generateGaussianPyramid(images, gaussian_kernel, level)
+    T, H, W, C = images.shape
+
+    shapes = []
+    tmp = images[0].copy()
+    for _ in range(level):
+        shapes.append(tmp.shape)
+        tmp = downsample(tmp, kernel)
+    approx_shape = tmp.shape
+
+    low_res = np.zeros((T, approx_shape[0], approx_shape[1], C), dtype=np.float32)
+    for t in range(T):
+        low_res[t] = generateGaussianPyramid(images[t], kernel, level)
                     
     # Filter the pyramid  
-    pyramid_filter = apply_temporal_filter(gaussian_pyramid, fps, freq_range)         
+    pyramid_filter = apply_temporal_filter(low_res, fps, freq_range)         
 
     # Video reconstruction   
     output_video = np.zeros_like(images)
