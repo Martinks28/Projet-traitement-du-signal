@@ -99,7 +99,10 @@ def generateGaussianPyramid(image, kernel, level):
       filtered image
     """
 
-    # A CODER
+    current = image.copy()
+    for _ in range(level):
+        current = downsample(current, kernel)
+    return current
 
 
 # ------------------------- Temporal filter -----------------------------------
