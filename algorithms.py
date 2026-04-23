@@ -28,12 +28,10 @@ def downsample(image, kernel):
       dowsampled image
     """
     
-    img_filtred = []
-    for img in image:
-        img_temp = cv2.filter2D(img, ddepth = -1, kernel = kernel)
-        img_filtred.append(img_temp)
+    
+    img_filtred = cv2.filter2D(image, ddepth = -1, kernel = kernel)
     img_filtred = np.array(img_filtred)
-    return img_filtred[::, ::2, ::2, ::]
+    return img_filtred[::2, ::2, ::]
 
 
 def upsample(image, kernel, dst_shape=None):
@@ -63,13 +61,10 @@ def upsample(image, kernel, dst_shape=None):
       output image
     """
     
-    T, H, W, C = image.shape
-    image_agrandie = np.zeros((T, H * 2, W * 2, C), dtype=image.dtype)
-    image_agrandie[:, ::2, ::2, :] = image
-    image_finale = []
-    for img in image_agrandie:
-        img_temp = cv2.filter2D(img, ddepth = -1, kernel = kernel)
-        image_finale.append(img_temp)
+    H, W, C = image.shape
+    image_agrandie = np.zeros((H * 2, W * 2, C), dtype=image.dtype)
+    image_agrandie[::2, ::2, :] = image
+    image_finale = cv2.filter2D(image_agrandie, ddepth = -1, kernel = kernel)
     image_finale = np.array(image_finale)
     return 4*image_finale
 

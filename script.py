@@ -1,4 +1,4 @@
-from algorithms import generateGaussianPyramid, apply_temporal_filter              
+from algorithms import generateGaussianPyramid, apply_temporal_filter, downsample, upsample           
 from utils import *
 
 
@@ -89,24 +89,31 @@ def gaussian_evm(images, fps, level, alpha, freq_range):
     tmp = images[0].copy()
     for _ in range(level):
         shapes.append(tmp.shape)
-        tmp = downsample(tmp, kernel)
+        tmp = downsample(tmp, gaussian_kernel)
     approx_shape = tmp.shape
 
     low_res = np.zeros((T, approx_shape[0], approx_shape[1], C), dtype=np.float32)
     for t in range(T):
-        low_res[t] = generateGaussianPyramid(images[t], kernel, level)
+        low_res[t] = generateGaussianPyramid(images[t], gaussian_kernel, level)
                     
     # Filter the pyramid  
     pyramid_filter = apply_temporal_filter(low_res, fps, freq_range)         
+    filtered_images = pyramid_filter * alpha
+    filtered_images_high_res = np.zeros_like(images, dtype=np.float32)
+
+    #upsample
+    for t in range(T):
+        tmp = filtered_images[t]
+        for l in range(level):
+            tmp = upsample(tmp, gaussian_kernel)  
+        filtered_images_high_res[t] = tmp
 
     # Video reconstruction   
     output_video = np.zeros_like(images)
-    for i in tqdm.tqdm(range(images.shape[0]), ascii=True, 
-     desc="Video reconstruction"):
-    
-        reconstructed_image = rgb2yiq(images[i]) + filtered_images[i]
-        reconstructed_image = yiq2rgb(reconstructed_image)
-        output_video[i] = np.clip(reconstructed_image, 0, 255)
+    for i in tqdm.tqdm(range(images.shape[0]), ascii=True, desc="Video reconstruction"):
+        reconstructed_image = images[i].astype(np.float32) + filtered_images_high_res[i]
+        
+        output_video[i] = np.clip(reconstructed_image, 0, 255).astype(np.uint8)
              
     return output_video
 
