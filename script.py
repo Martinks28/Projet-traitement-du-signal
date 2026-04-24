@@ -100,48 +100,23 @@ def gaussian_evm(images, fps, level, alpha, freq_range):
     pyramid_filter = apply_temporal_filter(low_res, fps, freq_range)         
     filtered_images = pyramid_filter * alpha
     filtered_images_high_res = np.zeros_like(images, dtype=np.float32)
+    
+    shapes_inverses = shapes[::-1]
 
     #upsample
     for t in range(T):
         tmp = filtered_images[t]
         for l in range(level):
-            tmp = upsample(tmp, gaussian_kernel)  
+            tmp = upsample(tmp, gaussian_kernel)
+            vraie_taille = shapes_inverses[l] 
+            H_cible, W_cible = vraie_taille[0], vraie_taille[1]
+            tmp = tmp[:H_cible, :W_cible]
         filtered_images_high_res[t] = tmp
 
     # Video reconstruction   
     output_video = np.zeros_like(images)
     for i in tqdm.tqdm(range(images.shape[0]), ascii=True, desc="Video reconstruction"):
         reconstructed_image = images[i].astype(np.float32) + filtered_images_high_res[i]
-        
         output_video[i] = np.clip(reconstructed_image, 0, 255).astype(np.uint8)
              
     return output_video
-
-    
-
-if __name__ == "__main__":
-   
-    # Load video
-    video_path = './video/face.mp4'
-    images, fps = load_video(video_path=video_path)
-    
-    # Parameters
-    level = 6
-    alpha = 50
-    low_omega = 0 # A MODIFIER
-    high_omega = 1e6 # A MODIFIER
-    freq_range = (low_omega, high_omega)
-    
-    # Motion amplification
-    # processed_video = evm(images, fps, level, alpha, freq_range)
-    processed_video = gaussian_evm(images, fps, level, alpha, freq_range)
-    print(processed_video.shape)
-    
-    # Save video
-    saving_path = './result/processed.mp4'
-    save_video(video=processed_video, saving_path=saving_path, fps=fps)
-
-
-
-
-

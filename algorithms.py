@@ -95,7 +95,7 @@ def generateGaussianPyramid(image, kernel, level):
     """
 
     current = image.copy()
-    for _ in range(level):
+    for i in range(level):
         current = downsample(current, kernel)
     return current
 
